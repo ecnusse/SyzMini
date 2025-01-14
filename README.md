@@ -12,7 +12,7 @@ sudo apt-get update
 sudo apt-get install -y make git gcc flex bison libelf-dev libssl-dev bc qemu-system-x86 build-essential debootstrap
 ```
 
-2. Install Go language support before compiling CountDown.
+2. Install Go language support before compiling SyzMini.
 
 ```
 wget https://dl.google.com/go/go1.22.1.linux-amd64.tar.gz
