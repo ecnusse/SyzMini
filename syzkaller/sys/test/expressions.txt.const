@@ -1,3 +1,0 @@
-arches = 32_fork_shmem, 32_shmem, 64, 64_fork
-FIELD_FLAG1 = 2
-FIELD_FLAG2 = 4
