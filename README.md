@@ -68,9 +68,8 @@ chmod +x create-image.sh
 
 6. Build SyzMini
 
-Clone SyzMini and compile the fuzzer. Make sure Go is installed.
-
 ```
+** Clone SyzMini and compile the fuzzer. Make sure Go is installed.
 cd SyzMini
 make
 ```
@@ -80,3 +79,4 @@ make
 ```
 cd SyzMini/bin && ./syz-manager -config your.cfg -influence_read ./influencev5.15.txt
 ```
+
