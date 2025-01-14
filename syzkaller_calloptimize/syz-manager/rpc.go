@@ -66,7 +66,7 @@ type RPCManagerView interface {
 	rotateCorpus() bool
 
 	// consume code
-	getInfluence() [][]uint8
+	getInfluence() ([][]uint8, int)
 }
 
 func startRPCServer(mgr *Manager) (*RPCServer, error) {
@@ -407,7 +407,7 @@ func (serv *RPCServer) LogMessage(m *rpctype.LogMessageReq, r *int) error {
 
 // consume code
 func (serv *RPCServer) GetInfluence(a *int, r *rpctype.InfluenceArgs) error {
-	r.InfluenceMatrix = serv.mgr.getInfluence()
+	r.InfluenceMatrix, r.Influence_proportion = serv.mgr.getInfluence()
 	fmt.Printf("manager:send influence successfully\n")
 	return nil
 }

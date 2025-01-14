@@ -209,5 +209,6 @@ type LogMessageReq struct {
 
 // consume code
 type InfluenceArgs struct {
-	InfluenceMatrix [][]uint8
+	InfluenceMatrix      [][]uint8
+	Influence_proportion int
 }

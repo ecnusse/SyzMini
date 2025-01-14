@@ -32,6 +32,7 @@ var (
 	flagStrict   = flag.Bool("strict", true, "parse input program in strict mode")
 )
 
+
 func main() {
 	flag.Parse()
 	target, err := prog.GetTarget(*flagOS, *flagArch)

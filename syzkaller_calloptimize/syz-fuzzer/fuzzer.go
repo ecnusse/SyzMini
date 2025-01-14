@@ -314,7 +314,37 @@ func main() {
 
 	// consume code
 	target.AnalyzeStaticInfluence()
-	fuzzer.getInfluenceFromManager()
+	
+	influence_proportion := fuzzer.getInfluenceFromManager()
+	fmt.Printf("influence_proportion:%v \n", influence_proportion)
+	if influence_proportion != 0 && influence_proportion != 100 {
+		var onesCoords []struct{ row, col int }
+		for i := range target.InfluenceMatrix {
+			for j := range target.InfluenceMatrix[i] {
+				if target.InfluenceMatrix[i][j] == 1 {
+					onesCoords = append(onesCoords, struct{ row, col int }{i, j})
+				}
+			}
+		}
+		numToZero := len(onesCoords) / 100 * (100 - influence_proportion)
+		if numToZero == 0 {
+			return
+		}
+		rand.Seed(time.Now().UnixNano())
+		for _, idx := range rand.Perm(len(onesCoords))[:numToZero] {
+			coord := onesCoords[idx]
+			target.InfluenceMatrix[coord.row][coord.col] = 0
+		}
+	}
+	count := 0
+	for i := 0; i < len(target.InfluenceMatrix); i++ {
+		for j := 0; j < len(target.InfluenceMatrix); j++ {
+			if target.InfluenceMatrix[i][j] == 1 {
+				count++
+			}
+		}
+	}
+	fmt.Printf("after influence_proportion:%v\n", count)
 
 	for needCandidates, more := true, true; more; needCandidates = false {
 		more = fuzzer.poll(needCandidates, nil)
@@ -693,9 +723,10 @@ func parseOutputType(str string) OutputType {
 }
 
 // consume code
-func (fuzzer *Fuzzer) getInfluenceFromManager() {
+func (fuzzer *Fuzzer) getInfluenceFromManager() int {
 	r := &rpctype.InfluenceArgs{
-		InfluenceMatrix: nil,
+		InfluenceMatrix:      nil,
+		Influence_proportion: 100,
 	}
 	a := 0
 	if err := fuzzer.manager.Call("Manager.GetInfluence", &a, r); err != nil {
@@ -715,4 +746,5 @@ func (fuzzer *Fuzzer) getInfluenceFromManager() {
 		}
 		fmt.Printf("fuzzer:load %v influence successfully\n", count)
 	}
+	return r.Influence_proportion
 }

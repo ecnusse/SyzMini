@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"math/rand"
 	"os"
 	"runtime"
 	"strconv"
@@ -56,9 +57,10 @@ var (
 	// by default.
 	flagCollide = flag.Bool("collide", false, "(DEPRECATED) collide syscalls to provoke data races")
 
-	flagProgramDirPath = flag.String("programdir", "", "the dir path for program")
-	flagOutPath        = flag.String("outpath", "", "the file for saving result path")
-	flagStartIdx       = flag.Int("startidx", -1, "start index")
+	flagProgramDirPath      = flag.String("programdir", "", "the dir path for program")
+	flagOutPath             = flag.String("outpath", "", "the file for saving result path")
+	flagStartIdx            = flag.Int("startidx", -1, "start index")
+	flagInfluenceProportion = flag.Int("influenceproportion", 100, "influence Proportion")
 )
 var file_path_ary []string
 var call_index_ary []int
@@ -125,6 +127,35 @@ func main() {
 	}
 	// consume code
 	target.AnalyzeStaticInfluence()
+	if *flagInfluenceProportion != 0 && *flagInfluenceProportion != 100 {
+		var onesCoords []struct{ row, col int }
+		for i := range target.InfluenceMatrix {
+			for j := range target.InfluenceMatrix[i] {
+				if target.InfluenceMatrix[i][j] == 1 {
+					onesCoords = append(onesCoords, struct{ row, col int }{i, j})
+				}
+			}
+		}
+		numToZero := len(onesCoords) / 100 * (100 - *flagInfluenceProportion)
+		if numToZero == 0 {
+			return
+		}
+		rand.Seed(time.Now().UnixNano())
+		for _, idx := range rand.Perm(len(onesCoords))[:numToZero] {
+			coord := onesCoords[idx]
+			target.InfluenceMatrix[coord.row][coord.col] = 0
+		}
+	}
+
+	count := 0
+	for i := 0; i < len(target.InfluenceMatrix); i++ {
+		for j := 0; j < len(target.InfluenceMatrix); j++ {
+			if target.InfluenceMatrix[i][j] == 1 {
+				count++
+			}
+		}
+	}
+	fmt.Printf("after influence_proportion:%v,%v\n", count, *flagInfluenceProportion)
 
 	progs := loadPrograms_comsume(target)
 	if len(progs) == 0 {

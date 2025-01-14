@@ -46,7 +46,8 @@ var (
 	flagDebug  = flag.Bool("debug", true, "dump all VM output to console")
 	flagBench  = flag.String("bench", "", "write execution statistics into this file periodically")
 
-	flagInfluence_read = flag.String("influence_read", "", "read influence data into this file periodically")
+	flagInfluence_read       = flag.String("influence_read", "", "read influence data into this file periodically")
+	flagInfluence_proportion = flag.Int("influence_proportion", 100, "read influence data into this file periodically")
 )
 
 type Manager struct {
@@ -1640,8 +1641,8 @@ func publicWebAddr(addr string) string {
 }
 
 // consume code
-func (mgr *Manager) getInfluence() [][]uint8 {
-	return mgr.InfluenceMatrix
+func (mgr *Manager) getInfluence() ([][]uint8, int) {
+	return mgr.InfluenceMatrix, *flagInfluence_proportion
 }
 
 func readArrayFromFile(filename string, data interface{}) error {
