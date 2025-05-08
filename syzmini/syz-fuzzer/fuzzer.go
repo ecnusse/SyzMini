@@ -706,11 +706,16 @@ func (fuzzer *Fuzzer) getInfluenceFromManager() {
 	if r.InfluenceMatrix != nil {
 		for i := 0; i < len(r.InfluenceMatrix); i++ {
 			for j := 0; j < len(r.InfluenceMatrix); j++ {
-				if r.InfluenceMatrix[i][j] == 1 {
-					fuzzer.target.InfluenceMatrix[i][j] = 1
-					count++
-				}
+				if r.InfluenceMatrix[i][j] == 1 && fuzzer.target.InfluenceMatrix[i][j] != 1 {
+					// if len(fuzzer.target.Syscalls[i].Args) == 0{
 
+					// }
+
+					// fuzzer.target.InfluenceMatrix[i][j] = 1
+					// count++
+
+					fmt.Printf("%v->%v\n", fuzzer.target.Syscalls[i].Name, fuzzer.target.Syscalls[j].Name)
+				}
 			}
 		}
 		fmt.Printf("fuzzer:load %v influence successfully\n", count)
