@@ -43,7 +43,7 @@ import (
 
 var (
 	flagConfig = flag.String("config", "", "configuration file")
-	flagDebug  = flag.Bool("debug", true, "dump all VM output to console")
+	flagDebug  = flag.Bool("debug", false, "dump all VM output to console")
 	flagBench  = flag.String("bench", "", "write execution statistics into this file periodically")
 
 	flagInfluence_read = flag.String("influence_read", "", "read influence data into this file periodically")
