@@ -6,6 +6,7 @@ package prog
 import (
 	"fmt"
 	"reflect"
+	"sort"
 )
 
 // consume code
@@ -475,6 +476,9 @@ func GetHash_uint32(data []uint32) uint32 {
 	if data == nil || len(data) <= 0 {
 		return 0
 	}
+	sort.Slice(data, func(i, j int) bool {
+		return data[i] < data[j]
+	})
 	var covHashValue uint32 = 0
 	for i := 0; i < len(data); i++ {
 		covHashValue ^= (data[i] + 0x9e3779b9 + (covHashValue << 6) + (covHashValue >> 2))
