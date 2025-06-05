@@ -84,4 +84,5 @@
     The `syz-manager` process will wind up VMs and start fuzzing in them.
     The `-config` command line option gives the location of the configuration file, which is described [here](configuration.md).
     Found crashes, statistics and other information is exposed on the HTTP address specified in the manager config.
+    The "-influence_read" command line option gives the location of the influence file, if you don't configure it, SyzMini will adopt the static influence relation.
 
