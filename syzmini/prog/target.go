@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"math/rand"
 	"sort"
-	"strings"
 	"sync"
 	"sync/atomic"
 )
@@ -376,18 +375,16 @@ func (pg *Builder) Finalize() (*Prog, error) {
 // consume code
 func (target *Target) AnalyzeStaticInfluence() {
 	type_uses := target.calcTypeUsage()
+	fmt.Printf("length of type:%v\n", len(type_uses))
 	target.InfluenceMatrix = make([][]uint8, len(target.Syscalls))
 	for i := range target.InfluenceMatrix {
 		target.InfluenceMatrix[i] = make([]uint8, len(target.Syscalls))
 	}
 
 	count := 0
-	for type_name, callid_dir := range type_uses {
+	for _, callid_dir := range type_uses {
 		dirIn_ids := []int{}
 		dirOut_ids := []int{}
-		if !strings.HasPrefix(type_name, "res") {
-			continue
-		}
 		for callid, dir := range callid_dir {
 			if dir == DirIn || dir == DirInOut {
 				dirIn_ids = append(dirIn_ids, callid)
@@ -400,8 +397,11 @@ func (target *Target) AnalyzeStaticInfluence() {
 			for _, call_id_src := range dirOut_ids {
 				for _, call_id_dest := range dirIn_ids {
 					if call_id_src != call_id_dest {
+						// if target.InfluenceMatrix[call_id_src][call_id_dest] != 1 {
+						// 	count++
+						// }
 						target.InfluenceMatrix[call_id_src][call_id_dest] = 1
-						count++
+
 						// fmt.Printf("\n%v\n%v\n", target.Syscalls[call_id_src], target.Syscalls[call_id_dest])
 					}
 				}
@@ -409,8 +409,8 @@ func (target *Target) AnalyzeStaticInfluence() {
 		}
 		// fmt.Printf("%v,%v,%v\n",type_name,len(dirOut_ids),len(dirIn_ids))
 	}
-	// fmt.Printf("Syzkaller call length %v\n", len(target.Syscalls))
-	// fmt.Printf("The number of static influence pair:%v\n", count)
+	fmt.Printf("Syzkaller call length %v\n", len(target.Syscalls))
+	fmt.Printf("The number of static influence pair:%v\n", count)
 }
 
 func (target *Target) calcTypeUsage() map[string]map[int]Dir {
@@ -419,45 +419,17 @@ func (target *Target) calcTypeUsage() map[string]map[int]Dir {
 		c := ctx.Meta
 		switch a := t.(type) {
 		case *ResourceType:
-			if target.AuxResources[a.Desc.Name] {
-				noteTypeUses(type_uses, c, ctx.Dir, "res%v", a.Desc.Name)
+			if _, ok := type_uses[a.Name()]; !ok {
+				resName := t.Name()
+				type_uses[resName] = make(map[int]Dir)
+				type_uses[resName][c.ID] = ctx.Dir
 			} else {
-				str := "res"
-				for _, k := range a.Desc.Kind {
-					str += "-" + k
-				}
-				noteTypeUses(type_uses, c, ctx.Dir, str)
+				type_uses[t.Name()][c.ID] = ctx.Dir
 			}
 		case *PtrType:
-			if _, ok := a.Elem.(*StructType); ok {
-				noteTypeUses(type_uses, c, ctx.Dir, "ptrto-%v", a.Elem.Name())
-			}
-			if _, ok := a.Elem.(*UnionType); ok {
-				noteTypeUses(type_uses, c, ctx.Dir, "ptrto-%v", a.Elem.Name())
-			}
-			if arr, ok := a.Elem.(*ArrayType); ok {
-				noteTypeUses(type_uses, c, ctx.Dir, "ptrto-%v", arr.Elem.Name())
-			}
 		case *BufferType:
-			switch a.Kind {
-			case BufferBlobRand, BufferBlobRange, BufferText, BufferCompressed:
-			case BufferString, BufferGlob:
-				if a.SubKind != "" {
-					noteTypeUses(type_uses, c, ctx.Dir, fmt.Sprintf("str-%v", a.SubKind))
-				}
-			case BufferFilename:
-				noteTypeUses(type_uses, c, DirIn, "filename")
-			default:
-				panic("unknown buffer kind")
-			}
 		case *VmaType:
-			noteTypeUses(type_uses, c, ctx.Dir, "vma")
 		case *IntType:
-			switch a.Kind {
-			case IntPlain, IntRange:
-			default:
-				panic("unknown int kind")
-			}
 		}
 	})
 	return type_uses
