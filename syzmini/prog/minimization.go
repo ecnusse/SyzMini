@@ -129,7 +129,7 @@ func removeCalls(p0 *Prog, callIndex0 int, crash bool, pred func(*Prog, int, int
 		}
 	}
 	// remove front calls
-	if len(remove_front_ids) > 0 {
+	for len(remove_front_ids) > 0 {
 		p := p0.Clone()
 		for index, _ := range remove_front_ids { //remove front
 			p.RemoveCall(remove_front_ids[len(remove_front_ids)-1-index]) //from back to front
@@ -146,11 +146,23 @@ func removeCalls(p0 *Prog, callIndex0 int, crash bool, pred func(*Prog, int, int
 				p.Influence_Hash_NeedUpdate = false
 				p.Minimize_ExecuteStatus = false
 			}
+
+			// only consider direct influence
+			remove_front_ids = []int{}
+			for i := 0; i < callIndex0; i++ {
+				if p0.Target.InfluenceMatrix[p0.Calls[i].Meta.ID][p0.Calls[callIndex0].Meta.ID] == 0 {
+					remove_front_ids = append(remove_front_ids, i)
+				}
+			}
+		} else {
+			remove_front_ids = []int{}
 		}
+
 		if Influence_Learning_Enable {
 			p.Influence_Hash_NeedUpdate = false
 			p.Minimize_ExecuteStatus = false
 		}
+
 	}
 
 	// 3. one-by-one minimization
@@ -273,8 +285,7 @@ func (typ *TypeCommon) minimize(ctx *minimizeArgsCtx, arg Arg, path string) bool
 	return false
 }
 
-
-// for struct type, we recursively visit each sub-field to simplify 
+// for struct type, we recursively visit each sub-field to simplify
 func (typ *StructType) minimize(ctx *minimizeArgsCtx, arg Arg, path string) bool {
 	a := arg.(*GroupArg)
 	for i, innerArg := range a.Inner {
